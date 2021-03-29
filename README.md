@@ -43,3 +43,4 @@ npm run test
 ```
 npm run dev
 ```
+# s-tani
