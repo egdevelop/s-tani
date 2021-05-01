@@ -29,3 +29,35 @@ exports.KomenValid = [
     check('foto', 'Terjadi Masalah Silahkan Coba Lagi Nanti').notEmpty(),
     check('isi', 'Komentar tidak boleh kosong').notEmpty(),
   ];
+
+  exports.injectValid = [
+    check('id', 'ID akun kosong').notEmpty(),
+    check('temp', 'Suhu Kosong').notEmpty(),
+    check('humi', 'Kelembaban tanah kosong').notEmpty(),
+    check('soil', 'Udara Kosong').notEmpty(),
+    check('altitude', 'Ketinggian Kosong').notEmpty(),
+  ];
+
+  exports.regisValid = [
+    check('nama', 'Nama tidak boleh kosong').notEmpty(),
+    check('username', 'Username tidak boleh kosong').notEmpty(),
+    check('pw', 'Password tidak boleh kosong').notEmpty(),
+  ];
+  exports.loginValid = [
+    check('username', 'Username tidak boleh kosong').notEmpty(),
+    check('pw', 'Password tidak boleh kosong').notEmpty(),
+  ];
+  exports.hashValid = [
+    check('access_token', 'access token tidak boleh kosong').notEmpty(),
+  ];
+  exports.staniValid = [
+    check('id', 'Server Error Silahkan hubungi admin').notEmpty(),
+  ];
+  exports.historyValid = [
+    check('id', 'Server Error Silahkan hubungi admin').notEmpty(),
+  ];
+  exports.postValid = [
+    check('id', 'Server Error Silahkan hubungi admin').notEmpty(),
+    check('nama', 'Server Error Silahkan hubungi admin').notEmpty(),
+    check('isi', 'Isi tidak boleh kosong').notEmpty(),
+  ];
