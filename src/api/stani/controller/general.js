@@ -2,6 +2,7 @@ const { response } = require("express");
 const db = require("./../config/db");
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const fetch = require('node-fetch');
 
 //load rank
 exports.loadRank = (req,res) =>{
@@ -13,6 +14,36 @@ exports.loadRank = (req,res) =>{
         }
     })
 }
+
+//PILIH TANAMAN
+  exports.pilihTanaman = (req,res)=>{
+    const {nama,id_petani} = req.body;
+    db.query("UPDATE petani SET tanaman = ? , status_petanian = 1 WHERE id = ?",[nama,id_petani],(err,hasil)=>{
+      if(hasil){
+        res.status(200).json({
+          pesan : "berhasil",
+        })
+      }else{
+        res.status(501).json(err);
+      }
+    })
+  }
+//END
+
+//SELESAI TANAMAN
+exports.selesaiTanam = (req,res)=>{
+  const {id_petani} = req.body;
+  db.query("UPDATE petani SET tanaman = ? , status_petanian = 0 WHERE id = ?" ,["Belum",id_petani],(err,hasil)=>{
+    if(hasil){
+      res.status(200).json({
+        pesan : "berhasil",
+      })
+    }else{
+      res.status(501).json(err);
+    }
+  })
+}
+//END
 
 // ROUTE LOGIN
 exports.Login = (req, res) => {
@@ -31,13 +62,35 @@ exports.Login = (req, res) => {
         const hash = hasil[0].password;
         bcrypt.compare(pw, hash, (err, match) => {
           if (match) {
-            const dataAkun = {
-              id: hasil[0].id,
-              nama: hasil[0].nama,
-              email: hasil[0].username,
-              resiko: hasil[0].resiko,
-            };
-            res.json(dataAkun);
+            fetch(`http://localhost:4000/weather?kota=${hasil[0].kota}`)
+            .then((res) => res.json())
+            .then((body) => {
+              db.query("SELECT * FROM test WHERE id_petani=? ORDER BY id DESC",[hasil[0].id],(err,resultsx)=>{
+                if(hasil.length > 0){
+                  const dataAkun = {
+                    id: hasil[0].id,
+                    nama: hasil[0].nama,
+                    email: hasil[0].username,
+                    resiko: hasil[0].resiko,
+                    cuaca: body.parameter[2].weather_day,
+                    ketinggian: resultsx[0].ketinggian,
+                    status_pertanian: hasil[0].status_petanian,
+                  };
+                  res.json(dataAkun);
+                }else{
+                  const dataAkun = {
+                    id: hasil[0].id,
+                    nama: hasil[0].nama,
+                    email: hasil[0].username,
+                    resiko: hasil[0].resiko,
+                    cuaca: body.parameter[2].weather_day,
+                    ketinggian: "None",
+                    status_pertanian: hasil[0].status_petanian,
+                  };
+                  res.json(dataAkun);
+                }
+              })
+            })
           } else {
             res.json({
               pesan: 'Maaf Password Anda Salah',
@@ -132,6 +185,31 @@ exports.jwthash = (req, res) => {
   }
   //END
 
+  //Komunitas
+  exports.komunitas = (req,res)=>{
+    db.query("SELECT nama,kota,tanaman FROM petani",(err,hasil)=>{
+      if(hasil){
+        res.status(200).json(hasil);
+      }else{
+        res.status(501).json(err);
+      }
+    })
+  }
+
+  //END
+  
+  //Market
+  exports.market = (req,res)=>{
+    db.query("SELECT * FROM marketplace",(err,hasil)=>{
+      if(hasil){
+        res.status(200).json(hasil);
+      }else{
+        res.status(501).json(err);
+      }
+    })
+  }
+  //END
+
   //HISTORY
   exports.history = (req,res)=>{
     const {id}= req.body;
@@ -145,23 +223,29 @@ exports.jwthash = (req, res) => {
   }
   //END
 
-  //STANI LAGIC
+  //STANI LOGIC
 exports.stani = (req,res)=>{
   const {id}= req.body;
-  db.query("SELECT * FROM test WHERE id_petani=? ORDER BY id DESC",[id],(err,hasil)=>{
-    if(hasil.length > 0){
-      db.query("SELECT * FROM tanaman WHERE suhu_min <= ? AND suhu_max >= ? AND tanah_min <= ? AND tanah_max >= ? AND udara_min <= ? AND udara_max >= ? AND ketinggian_min <= ? AND ketinggian_max >= ? ORDER BY rasio_pasar DESC LIMIT 3",
-      [hasil[0].suhu,hasil[0].suhu,hasil[0].tanah,hasil[0].tanah,hasil[0].udara,hasil[0].udara,hasil[0].ketinggian,hasil[0].ketinggian],
-      (err,results)=>{
-        if(results){
-          res.status(200).json(results);
-        }else{
-          res.status(501).json(err);
-        }
-      })
-    }else{
-      res.status(200);
-    }
+  db.query("SELECT * FROM petani WHERE id = ?",[id],(err,body)=>{
+    fetch(`http://localhost:4000/weather?kota=${body[0].kota}`)
+            .then((res) => res.json())
+            .then((resultss) => {
+              db.query("SELECT * FROM test WHERE id_petani=? ORDER BY id DESC",[id],(err,hasil)=>{
+                if(hasil.length > 0){
+                  db.query("SELECT * FROM tanaman WHERE suhu_min <= ? AND suhu_max >= ? AND tanah_min <= ? AND tanah_max >= ? AND udara_min <= ? AND udara_max >= ? AND ketinggian_min <= ? AND ketinggian_max >= ? AND cuaca_min <= ? AND cuaca_max >= ? ORDER BY rasio_pasar DESC LIMIT 3",
+                  [hasil[0].suhu,hasil[0].suhu,hasil[0].tanah,hasil[0].tanah,hasil[0].udara,hasil[0].udara,hasil[0].ketinggian,hasil[0].ketinggian,resultss.parameter[2].weather_day,resultss.parameter[2].weather_day],
+                  (err,results)=>{
+                    if(results){
+                      res.status(200).json(results);
+                    }else{
+                      res.status(501).json(err);
+                    }
+                  })
+                }else{
+                  res.status(200);
+                }
+              })
+            })
   })
 }
   //END STANI

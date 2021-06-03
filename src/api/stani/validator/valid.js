@@ -61,3 +61,10 @@ exports.KomenValid = [
     check('nama', 'Server Error Silahkan hubungi admin').notEmpty(),
     check('isi', 'Isi tidak boleh kosong').notEmpty(),
   ];
+  exports.pilihValid = [
+    check('id_petani', 'Server Error Silahkan hubungi admin').notEmpty(),
+    check('nama', 'Server Error Silahkan hubungi admin').notEmpty(),
+  ];
+  exports.selesaiValid = [
+    check('id_petani', 'Server Error Silahkan hubungi admin').notEmpty(),
+  ];
